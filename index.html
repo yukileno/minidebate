@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffd84d">
+<title>ミニディベート</title>
+<style>
+:root{
+  --bg:#fff6d6; --card:#ffffff; --ink:#3a2f4a; --sub:#7a6f8a;
+  --a:#ff6b6b; --a-d:#d64545; --a-l:#ffe3e3;
+  --b:#3b9cff; --b-d:#1f78d6; --b-l:#dcedff;
+  --j:#ffb300; --j-d:#c98700; --j-l:#fff1c4;
+  --main:#7c4dff; --main-d:#5b32d6; --ok:#2ec27e;
+  --shadow:0 5px 0 rgba(58,47,74,.15);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(#ffe9a0 2px,transparent 2px);
+  background-size:24px 24px;
+  color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","BIZ UDPGothic","Yu Gothic","Meiryo",system-ui,sans-serif;
+  font-weight:700; line-height:1.5; min-height:100vh;
+}
+.app{max-width:480px;margin:0 auto;padding:0 12px 40px;padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+header{
+  display:flex;align-items:center;gap:8px;padding:12px 4px 8px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+}
+header h1{flex:1;margin:0;font-size:22px;letter-spacing:.02em}
+.icon-btn{
+  width:46px;height:46px;border-radius:50%;border:none;background:#fff;font-size:22px;
+  box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(58,47,74,.15)}
+
+/* stepper */
+.steps{display:flex;gap:6px;margin:6px 0 14px}
+.step-tab{
+  flex:1;border:none;border-radius:16px;padding:8px 4px;background:#fff;color:var(--sub);
+  font:inherit;font-size:13px;cursor:pointer;box-shadow:var(--shadow);line-height:1.3;
+}
+.step-tab b{display:block;font-size:18px}
+.step-tab.active{background:var(--main);color:#fff}
+.step-tab.done:not(.active){background:#e7ffe9;color:#1d8f58}
+
+.card{background:var(--card);border-radius:26px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{margin:0 0 10px;font-size:19px}
+.hint{color:var(--sub);font-size:14px;margin:4px 0 12px}
+
+.btn{
+  display:block;width:100%;border:none;border-radius:20px;padding:16px 12px;font:inherit;font-size:19px;
+  color:#fff;background:var(--main);box-shadow:0 6px 0 var(--main-d);cursor:pointer;margin-top:12px;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--main-d)}
+.btn:disabled{opacity:.55;pointer-events:none}
+.btn.green{background:var(--ok);box-shadow:0 6px 0 #1d9461}
+.btn.green:active{box-shadow:0 2px 0 #1d9461}
+.btn.gray{background:#9a93a8;box-shadow:0 6px 0 #77708a}
+.btn.gray:active{box-shadow:0 2px 0 #77708a}
+.btn.small{font-size:15px;padding:10px;border-radius:14px;margin-top:0}
+.btn.red{background:var(--a);box-shadow:0 6px 0 var(--a-d)}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+
+/* slot */
+.slot{
+  background:linear-gradient(#fff9e0,#fff);border:4px solid var(--j);border-radius:22px;
+  min-height:110px;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:12px;font-size:23px;position:relative;overflow:hidden;
+}
+.slot.spinning{color:var(--sub);filter:blur(.4px)}
+.slot.landed{animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(.85)}60%{transform:scale(1.07)}100%{transform:scale(1)}}
+.stances{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.stance{border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:18px}
+.stance.A{background:var(--a-l);border:3px solid var(--a)}
+.stance.B{background:var(--b-l);border:3px solid var(--b)}
+.badge{
+  flex:none;min-width:64px;text-align:center;border-radius:999px;color:#fff;padding:3px 10px;font-size:15px;
+}
+.A .badge{background:var(--a)} .B .badge{background:var(--b)} .J .badge{background:var(--j)}
+.hidden{display:none!important}
+
+/* members */
+.member-input{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.member-input span{font-size:24px}
+input[type=text]{
+  width:100%;border:3px solid #e2dcf0;border-radius:14px;padding:11px 12px;font:inherit;font-size:17px;color:var(--ink);background:#fff;
+}
+input[type=text]:focus{outline:none;border-color:var(--main)}
+.role-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.role{
+  border-radius:20px;padding:12px 14px;display:flex;align-items:center;gap:12px;border:3px solid;
+}
+.role.A{background:var(--a-l);border-color:var(--a)}
+.role.B{background:var(--b-l);border-color:var(--b)}
+.role.J{background:var(--j-l);border-color:var(--j)}
+.role .emoji{font-size:34px}
+.role .who{font-size:21px;word-break:break-all}
+.role .what{font-size:14px;color:var(--sub)}
+.role.spin{opacity:.85}
+
+/* timer / phases */
+.phase-dots{display:flex;gap:6px;margin-bottom:12px}
+.dot{flex:1;height:10px;border-radius:99px;background:#e6e0f2}
+.dot.done{background:var(--ok)} .dot.cur{background:var(--main)}
+.phase-title{font-size:22px;margin:0}
+.phase-sub{color:var(--sub);font-size:14px}
+.phase-msg{background:#f5f1ff;border-radius:18px;padding:12px 14px;margin:12px 0;font-size:17px}
+.phase-who{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.chip{border-radius:999px;padding:3px 12px;font-size:14px;color:#fff}
+.chip.A{background:var(--a)} .chip.B{background:var(--b)} .chip.J{background:var(--j)}
+.timer{
+  font-size:78px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1.1;
+  margin:8px 0;color:var(--main-d);
+}
+.timer.warn{color:var(--a-d);animation:blink 1s infinite}
+.timer.end{color:var(--a-d)}
+@keyframes blink{50%{opacity:.45}}
+.bar{height:14px;background:#e6e0f2;border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;width:100%;background:var(--ok);border-radius:99px;transition:width .3s linear}
+.nav{display:flex;gap:10px;margin-top:6px}
+
+/* accordion */
+details{background:#fff;border-radius:22px;box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+summary{padding:16px 18px;font-size:18px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"▼";font-size:13px;color:var(--sub);transition:transform .2s}
+details[open] summary::after{transform:rotate(180deg)}
+.script{padding:0 18px 16px}
+.script h4{margin:12px 0 4px;font-size:15px;color:var(--j-d)}
+.script p{margin:0;background:var(--j-l);border-radius:14px;padding:8px 12px;font-size:15px}
+.script p.cur{outline:3px solid var(--j)}
+
+/* modal */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(40,30,60,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;
+}
+.modal{
+  background:#fff;width:100%;max-width:480px;max-height:92vh;overflow:auto;border-radius:28px 28px 0 0;padding:18px;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom));
+}
+@media(min-width:520px){.modal-bg{align-items:center}.modal{border-radius:28px}}
+.modal h2{margin:0 0 6px}
+.modal label{display:block;font-size:14px;margin:10px 0 4px;color:var(--sub)}
+.theme-list{margin:10px 0;padding:0;list-style:none;max-height:260px;overflow:auto;border-radius:14px;border:3px solid #eee8f8}
+.theme-list li{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:2px solid #f1ecfa;font-size:14px}
+.theme-list li:last-child{border:none}
+.theme-list .t{flex:1;min-width:0}
+.theme-list .t small{display:block;color:var(--sub);font-weight:400}
+.del{border:none;background:var(--a);color:#fff;border-radius:12px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.tag{font-size:11px;background:#eee8f8;color:var(--sub);border-radius:99px;padding:1px 8px}
+
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;z-index:60;font-size:14px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🗣️ ミニディベート</h1>
+    <button class="icon-btn" id="btnTheme" aria-label="テーマを編集">✏️</button>
+    <button class="icon-btn" id="btnMute" aria-label="音の切り替え">🔊</button>
+  </header>
+
+  <nav class="steps" id="steps">
+    <button class="step-tab active" data-step="1"><b>🎰</b>1 テーマ</button>
+    <button class="step-tab" data-step="2"><b>🎭</b>2 役割</button>
+    <button class="step-tab" data-step="3"><b>⏱️</b>3 ディベート</button>
+  </nav>
+
+  <!-- STEP 1 -->
+  <section id="step1">
+    <div class="card">
+      <h2>🎰 テーマルーレット</h2>
+      <p class="hint">ボタンをおして、きょうのテーマを決めよう！</p>
+      <div class="slot" id="themeSlot">❓ テーマはなにかな？</div>
+      <div class="stances hidden" id="stances">
+        <div class="stance A"><span class="badge">🅰️ A</span><span id="stA"></span></div>
+        <div class="stance B"><span class="badge">🅱️ B</span><span id="stB"></span></div>
+      </div>
+      <button class="btn" id="spinTheme">🎰 テーマルーレットを回す</button>
+      <button class="btn green hidden" id="toStep2">つぎへ：役割を決める ▶</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="step2" class="hidden">
+    <div class="card">
+      <h2>🎭 役割ルーレット</h2>
+      <div class="stances" id="stances2"></div>
+      <p class="hint" style="margin-top:14px">3人の名前を入力しよう（そのままでもOK）</p>
+      <div id="memberInputs"></div>
+      <div class="role-list" id="roleList"></div>
+      <button class="btn" id="spinRole">🎭 役割ルーレットを回す</button>
+      <button class="btn green hidden" id="toStep3">つぎへ：ディベートを始める ▶</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section id="step3" class="hidden">
+    <div class="card">
+      <div class="phase-dots" id="dots"></div>
+      <p class="phase-sub" id="phaseNo"></p>
+      <h2 class="phase-title" id="phaseTitle"></h2>
+      <div class="phase-msg" id="phaseMsg"></div>
+      <div class="phase-who" id="phaseWho"></div>
+      <div id="timerBox">
+        <div class="timer" id="timerText">1:00</div>
+        <div class="bar"><i id="timerBar"></i></div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn" id="tStart">▶ スタート</button>
+          <button class="btn gray" id="tReset">↺ リセット</button>
+        </div>
+      </div>
+      <div id="judgeBox" class="hidden">
+        <div class="timer" style="font-size:64px">👑⚖️</div>
+      </div>
+      <div class="nav">
+        <button class="btn small gray" id="prevPhase" style="margin-top:12px">◀ まえへ</button>
+        <button class="btn small green" id="nextPhase" style="margin-top:12px">つぎへ ▶</button>
+      </div>
+    </div>
+
+    <details id="cheat">
+      <summary>📜 司会のセリフ例（カンペ）</summary>
+      <div class="script" id="scriptBody"></div>
+    </details>
+    <button class="btn gray" id="restart">🔄 はじめからやりなおす</button>
+  </section>
+</div>
+
+<!-- theme modal -->
+<div class="modal-bg hidden" id="modalBg">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h2>✏️ テーマをつくる・けす</h2>
+    <p class="hint">先生や友だちとオリジナルのテーマを追加できるよ。保存されて、次に開いても残るよ。</p>
+    <label for="inTitle">テーマ（タイトル）</label>
+    <input type="text" id="inTitle" maxlength="40" placeholder="例：給食にデザートは必要？">
+    <label for="inA">Aの立場</label>
+    <input type="text" id="inA" maxlength="20" placeholder="例：必要">
+    <label for="inB">Bの立場</label>
+    <input type="text" id="inB" maxlength="20" placeholder="例：不要">
+    <button class="btn green" id="addTheme">＋ テーマを追加</button>
+    <h2 style="margin-top:18px;font-size:16px">テーマ一覧（<span id="themeCount">0</span>個）</h2>
+    <ul class="theme-list" id="themeList"></ul>
+    <button class="btn gray" id="closeModal">とじる</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- data ---------- */
+const DEFAULT_THEMES=[
+ ["小学生に宿題は必要？","賛成・必要","反対・不要"],
+ ["学校の服装はどっちがいい？","制服がいい","私服がいい"],
+ ["給食の主食、毎日出るなら？","毎日パン","毎日ごはん"],
+ ["休み時間の過ごし方は？","外で遊ぶべき","教室で過ごすべき"],
+ ["掃除の時間はどっちがいい？","毎日少しずつ","週1回まとめて"],
+ ["小学生のお小遣いの決め方は？","毎月決まった額","お手伝い歩合制"],
+ ["ペットを飼うならどっち？","犬がいい","猫がいい"],
+ ["住むならどっちがいい？","便利な都会","自然豊かな田舎"],
+ ["朝ごはんはどっち派？","パン派","ごはん派"],
+ ["休みの期間を長くするなら？","夏休みを長く","冬休みを長く"],
+ ["授業で使う道具はどっち？","紙の教科書・ノート","すべてタブレット"],
+ ["本を読むならどっちがいい？","紙の本","電子書籍"],
+ ["小学生の自分専用スマホ","賛成・持つべき","反対・まだ早い"],
+ ["買い物をするならどっち？","お店に行って買う","ネット通販で買う"],
+ ["将来の学校の先生はどっち？","人間の先生","AIロボットの先生"],
+ ["タイムマシンで行くなら？","過去に行く","未来に行く"],
+ ["1年間ずっと同じ季節なら？","ずっと夏","ずっと冬"],
+ ["ひみつ道具をもらうなら？","どこでもドア","タケコプター"],
+ ["旅行に行くならどっち？","国内旅行","海外旅行"],
+ ["放課後の過ごし方は？","習い事をたくさん","自由な遊び時間"]
+].map(function(t){return {title:t[0],a:t[1],b:t[2]}});
+
+const PHASES=[
+ {name:"作戦タイム",emoji:"💡",sec:60,who:["A","B"],
+  msg:"自分の立場（AまたはB）の理由と具体例を考えよう！",
+  say:"「では、作戦タイムです。自分の立場の理由と、具体的な例を考えてください。1分間です。」"},
+ {name:"A派の発表",emoji:"🅰️",sec:60,who:["A"],
+  msg:"A派の人は自分の意見を発表しよう！",
+  say:"「A派の人、意見を発表してください。時間は1分です。では、どうぞ！」"},
+ {name:"B派の発表",emoji:"🅱️",sec:60,who:["B"],
+  msg:"B派の人は自分の意見を発表しよう！",
+  say:"「次はB派の人、意見を発表してください。時間は1分です。では、どうぞ！」"},
+ {name:"質問＆反論タイム",emoji:"🔥",sec:120,who:["A","B"],
+  msg:"お互いに質問したり、意見を戦わせよう！",
+  say:"「質問と反論の時間です。相手の意見でわからなかったことを質問したり、反対の意見を言ったりしましょう。2分間です。」"},
+ {name:"ジャッジタイム",emoji:"👑",sec:0,who:["J"],
+  msg:"👑司会の人は、どちらの意見に納得したか判定して理由を発表しよう！",
+  say:"「ジャッジタイムです。ぼく（わたし）は〇〇派の意見に納得しました。なぜなら…。みなさん、ありがとうございました！」"}
+];
+const EXTRA_SAY=[
+ ["はじめのあいさつ","「これからミニディベートを始めます。テーマは『{theme}』です。A派は『{a}』、B派は『{b}』です。」"],
+ ["こまったとき","「時間が足りなくなったら、一番言いたいことを先に言ってね。」「相手の意見も最後までよく聞こうね。」"]
+];
+
+const STORE="minidebate.customThemes.v1";
+const MUTE_KEY="minidebate.mute.v1";
+
+/* ---------- state ---------- */
+let customThemes=load();
+let theme=null;                // chosen theme
+let members=["1人目","2人目","3人目"];
+let roles=null;                // [{name, role:'A'|'B'|'J'}]
+let phaseIdx=0;
+let busy=false;
+let muted=false;
+try{muted=localStorage.getItem(MUTE_KEY)==="1"}catch(e){}
+
+const $=function(id){return document.getElementById(id)};
+
+function load(){
+  try{
+    const v=JSON.parse(localStorage.getItem(STORE)||"[]");
+    if(Array.isArray(v)) return v.filter(function(x){return x&&x.title&&x.a&&x.b});
+  }catch(e){}
+  return [];
+}
+function save(){
+  try{localStorage.setItem(STORE,JSON.stringify(customThemes))}catch(e){}
+}
+function allThemes(){return DEFAULT_THEMES.concat(customThemes)}
+
+/* ---------- audio ---------- */
+let ac=null;
+function audio(){
+  if(!ac){
+    try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){ac=null}
+  }
+  if(ac&&ac.state==="suspended") ac.resume();
+  return ac;
+}
+function tone(freq,dur,type,vol,delay){
+  if(muted) return;
+  const c=audio(); if(!c) return;
+  const t=c.currentTime+(delay||0);
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||"square"; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol||0.12,t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t); o.stop(t+dur+0.02);
+}
+function sndTick(i){ tone(700+(i%5)*120,0.07,"square",0.08) }
+function sndFanfare(){
+  const n=[523.25,659.25,783.99,1046.5,783.99,1046.5];
+  const d=[0,.12,.24,.36,.5,.62];
+  n.forEach(function(f,i){tone(f,i===5?.6:.18,"triangle",.2,d[i]); tone(f/2,i===5?.6:.18,"sine",.12,d[i])});
+}
+function sndAlarm(){
+  for(let i=0;i<6;i++){ tone(i%2?880:1175,0.18,"square",.16,i*.22) }
+}
+function sndBeep(){ tone(660,.1,"sine",.12) }
+
+function setMute(m){
+  muted=m; $("btnMute").textContent=m?"🔇":"🔊";
+  try{localStorage.setItem(MUTE_KEY,m?"1":"0")}catch(e){}
+}
+
+/* ---------- confetti ---------- */
+function confetti(){
+  const box=document.createElement("div"); box.className="confetti";
+  const cols=["#ff6b6b","#3b9cff","#ffb300","#2ec27e","#7c4dff","#ff8ad8"];
+  for(let i=0;i<50;i++){
+    const p=document.createElement("i");
+    p.style.left=Math.random()*100+"%";
+    p.style.background=cols[i%cols.length];
+    p.style.animationDuration=(1.6+Math.random()*1.6)+"s";
+    p.style.animationDelay=(Math.random()*.4)+"s";
+    box.appendChild(p);
+  }
+  document.body.appendChild(box);
+  setTimeout(function(){box.remove()},3800);
+}
+function toast(msg){
+  const t=document.createElement("div"); t.className="toast"; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(function(){t.remove()},2200);
+}
+
+/* ---------- step nav ---------- */
+function unlocked(n){
+  if(n===1) return true;
+  if(n===2) return !!theme;
+  return !!theme&&!!roles;
+}
+function showStep(n){
+  if(!unlocked(n)){ toast(n===2?"先にテーマを決めよう！":"先に役割を決めよう！"); return }
+  [1,2,3].forEach(function(i){$("step"+i).classList.toggle("hidden",i!==n)});
+  document.querySelectorAll(".step-tab").forEach(function(b){
+    const s=+b.dataset.step;
+    b.classList.toggle("active",s===n);
+    b.classList.toggle("done",s<n||(s===1&&!!theme)||(s===2&&!!roles));
+  });
+  if(n===2) renderStep2();
+  if(n===3) renderPhase();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("steps").addEventListener("click",function(e){
+  const b=e.target.closest(".step-tab"); if(b&&!busy) showStep(+b.dataset.step);
+});
+
+/* ---------- slot animation ---------- */
+function slotSpin(items,render,onTick,onDone,steps){
+  // decelerating: delay grows each step
+  let i=0, delay=50;
+  const total=steps||26;
+  let idx=Math.floor(Math.random()*items.length);
+  function frame(){
+    idx=(idx+1)%items.length;
+    render(items[idx],false);
+    onTick(i);
+    i++;
+    if(i<total){
+      delay*= (i>total-10)?1.28:1.05;
+      setTimeout(frame,delay);
+    }else{
+      onDone();
+    }
+  }
+  frame();
+}
+
+/* ---------- STEP 1 ---------- */
+function showStances(el,t){
+  el.innerHTML="";
+  [["A","🅰️ A",t.a],["B","🅱️ B",t.b]].forEach(function(r){
+    const d=document.createElement("div"); d.className="stance "+r[0];
+    const b=document.createElement("span"); b.className="badge"; b.textContent=r[1];
+    const s=document.createElement("span"); s.textContent=r[2];
+    d.appendChild(b); d.appendChild(s); el.appendChild(d);
+  });
+}
+$("spinTheme").addEventListener("click",function(){
+  if(busy) return; busy=true;
+  audio();
+  const list=allThemes();
+  const final=list[Math.floor(Math.random()*list.length)];
+  const slot=$("themeSlot");
+  $("stances").classList.add("hidden");
+  $("toStep2").classList.add("hidden");
+  $("spinTheme").disabled=true;
+  slot.classList.remove("landed"); slot.classList.add("spinning");
+  const steps=26;
+  let n=0;
+  slotSpin(list,function(t){slot.textContent="🎲 "+t.title},function(i){sndTick(i)},function(){
+    theme=final; roles=null; // new theme resets roles
+    slot.classList.remove("spinning"); slot.textContent="🎯 "+final.title;
+    void slot.offsetWidth; slot.classList.add("landed");
+    $("stances").classList.remove("hidden"); showStances($("stances"),final);
+    $("toStep2").classList.remove("hidden");
+    $("spinTheme").disabled=false; $("spinTheme").textContent="🎰 もう一度まわす";
+    sndFanfare(); confetti(); busy=false;
+    document.querySelectorAll(".step-tab")[0].classList.add("done");
+    document.querySelectorAll(".step-tab")[1].classList.remove("done");
+    $("toStep3").classList.add("hidden");
+  },steps);
+});
+$("toStep2").addEventListener("click",function(){showStep(2)});
+
+/* ---------- STEP 2 ---------- */
+function buildMemberInputs(){
+  const box=$("memberInputs"); if(box.childElementCount) return;
+  ["1人目","2人目","3人目"].forEach(function(def,i){
+    const w=document.createElement("div"); w.className="member-input";
+    const e=document.createElement("span"); e.textContent=["😀","😎","🤗"][i];
+    const inp=document.createElement("input"); inp.type="text"; inp.maxLength=10; inp.value=def;
+    inp.setAttribute("aria-label",def+"の名前");
+    inp.addEventListener("input",function(){members[i]=inp.value.trim()||def});
+    inp.addEventListener("focus",function(){inp.select()});
+    w.appendChild(e); w.appendChild(inp); box.appendChild(w);
+  });
+}
+const ROLE_INFO={
+  A:function(){return {emoji:"🅰️",label:"A派",sub:theme.a}},
+  B:function(){return {emoji:"🅱️",label:"B派",sub:theme.b}},
+  J:function(){return {emoji:"👑",label:"司会・ジャッジ",sub:"進行して、最後に判定する"}}
+};
+function renderStep2(){
+  buildMemberInputs();
+  showStances($("stances2"),theme);
+  $("stances2").insertAdjacentHTML("afterbegin","");
+  if(roles){ renderRoles(roles,false); $("toStep3").classList.remove("hidden") }
+  else{ $("roleList").innerHTML=""; $("toStep3").classList.add("hidden") }
+}
+function renderRoles(arr,spin){
+  const box=$("roleList"); box.innerHTML="";
+  arr.forEach(function(r){
+    const info=ROLE_INFO[r.role]();
+    const d=document.createElement("div"); d.className="role "+r.role+(spin?" spin":"");
+    const em=document.createElement("div"); em.className="emoji"; em.textContent=info.emoji;
+    const tx=document.createElement("div");
+    const w=document.createElement("div"); w.className="who"; w.textContent=r.name;
+    const wh=document.createElement("div"); wh.className="what"; wh.textContent=info.label+"："+info.sub;
+    tx.appendChild(w); tx.appendChild(wh); d.appendChild(em); d.appendChild(tx); box.appendChild(d);
+  });
+}
+function shuffle(a){
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+$("spinRole").addEventListener("click",function(){
+  if(busy) return; busy=true; audio();
+  const names=[0,1,2].map(function(i){
+    const inp=$("memberInputs").children[i].querySelector("input");
+    return inp.value.trim()||["1人目","2人目","3人目"][i];
+  });
+  members=names;
+  const finalRoles=shuffle(["A","B","J"]);
+  const final=names.map(function(n,i){return {name:n,role:finalRoles[i]}});
+  $("spinRole").disabled=true; $("toStep3").classList.add("hidden");
+  slotSpin([0,1,2,3,4,5],function(){
+    renderRoles(names.map(function(n,i){return {name:n,role:shuffle(["A","B","J"])[0]}}),true);
+  },function(i){sndTick(i)},function(){
+    roles=final; renderRoles(final,false);
+    $("spinRole").disabled=false; $("spinRole").textContent="🎭 もう一度まわす";
+    $("toStep3").classList.remove("hidden");
+    document.querySelectorAll(".step-tab")[1].classList.add("done");
+    sndFanfare(); confetti(); busy=false;
+    phaseIdx=0; resetTimer(true);
+  },24);
+});
+$("toStep3").addEventListener("click",function(){showStep(3)});
+
+/* ---------- STEP 3 ---------- */
+let remain=0, running=false, endAt=0, tick=null, alarmed=false;
+function fmt(s){const m=Math.floor(s/60), r=s%60; return m+":"+(r<10?"0":"")+r}
+function namesOf(role){
+  return roles.filter(function(r){return r.role===role}).map(function(r){return r.name});
+}
+function fillSay(s){
+  return s.replace("{theme}",theme.title).replace("{a}",theme.a).replace("{b}",theme.b);
+}
+function renderPhase(){
+  const p=PHASES[phaseIdx];
+  const dots=$("dots"); dots.innerHTML="";
+  PHASES.forEach(function(_,i){
+    const d=document.createElement("div"); d.className="dot"+(i<phaseIdx?" done":i===phaseIdx?" cur":"");
+    dots.appendChild(d);
+  });
+  $("phaseNo").textContent="フェーズ "+(phaseIdx+1)+" / "+PHASES.length+" ・ テーマ：「"+theme.title+"」";
+  $("phaseTitle").textContent=p.emoji+" "+p.name+(p.sec?"（"+(p.sec/60)+"分）":"");
+  $("phaseMsg").textContent=p.msg;
+  const who=$("phaseWho"); who.innerHTML="";
+  p.who.forEach(function(role){
+    const info=ROLE_INFO[role]();
+    namesOf(role).forEach(function(n){
+      const c=document.createElement("span"); c.className="chip "+role; c.textContent=info.emoji+" "+n;
+      who.appendChild(c);
+    });
+  });
+  const hasTimer=p.sec>0;
+  $("timerBox").classList.toggle("hidden",!hasTimer);
+  $("judgeBox").classList.toggle("hidden",hasTimer);
+  $("prevPhase").disabled=phaseIdx===0;
+  $("nextPhase").textContent=phaseIdx===PHASES.length-1?"🎉 おわり":"つぎへ ▶";
+  resetTimer(true);
+  renderScript();
+}
+function renderScript(){
+  const b=$("scriptBody"); b.innerHTML="";
+  const add=function(h,t,cur){
+    const hh=document.createElement("h4"); hh.textContent=h;
+    const pp=document.createElement("p"); pp.textContent=t; if(cur) pp.className="cur";
+    b.appendChild(hh); b.appendChild(pp);
+  };
+  add(EXTRA_SAY[0][0],fillSay(EXTRA_SAY[0][1]),false);
+  PHASES.forEach(function(p,i){add(p.emoji+" "+p.name,p.say,i===phaseIdx)});
+  add(EXTRA_SAY[1][0],EXTRA_SAY[1][1],false);
+}
+function setTimerView(){
+  const p=PHASES[phaseIdx]; if(!p.sec) return;
+  const t=$("timerText");
+  t.textContent=fmt(Math.max(0,Math.ceil(remain)));
+  t.classList.toggle("warn",running&&remain<=10&&remain>0);
+  t.classList.toggle("end",remain<=0);
+  $("timerBar").style.width=(Math.max(0,remain)/p.sec*100)+"%";
+}
+function resetTimer(silent){
+  clearInterval(tick); running=false; alarmed=false;
+  remain=PHASES[phaseIdx].sec;
+  $("tStart").textContent="▶ スタート"; $("tStart").classList.remove("red");
+  $("tStart").disabled=false;
+  setTimerView();
+}
+function loop(){
+  remain=(endAt-Date.now())/1000;
+  if(remain<=0){
+    remain=0; clearInterval(tick); running=false;
+    $("tStart").textContent="⏰ おわり！"; $("tStart").disabled=true;
+    setTimerView(); sndAlarm(); alarmed=true;
+    if(navigator.vibrate) try{navigator.vibrate([300,150,300,150,300])}catch(e){}
+    return;
+  }
+  setTimerView();
+}
+$("tStart").addEventListener("click",function(){
+  audio();
+  if(running){ // pause
+    clearInterval(tick); running=false;
+    remain=(endAt-Date.now())/1000;
+    $("tStart").textContent="▶ つづける"; setTimerView(); return;
+  }
+  if(remain<=0) return;
+  sndBeep();
+  endAt=Date.now()+remain*1000; running=true;
+  $("tStart").textContent="⏸ 一時停止";
+  clearInterval(tick); tick=setInterval(loop,200); loop();
+});
+$("tReset").addEventListener("click",function(){resetTimer()});
+$("prevPhase").addEventListener("click",function(){
+  if(phaseIdx>0){phaseIdx--; renderPhase()}
+});
+$("nextPhase").addEventListener("click",function(){
+  if(phaseIdx<PHASES.length-1){phaseIdx++; renderPhase(); window.scrollTo({top:0,behavior:"smooth"})}
+  else{ sndFanfare(); confetti(); toast("おつかれさま！ミニディベート完了！🎉") }
+});
+$("restart").addEventListener("click",function(){
+  clearInterval(tick); running=false;
+  theme=null; roles=null; phaseIdx=0;
+  $("themeSlot").textContent="❓ テーマはなにかな？";
+  $("stances").classList.add("hidden"); $("toStep2").classList.add("hidden");
+  $("spinTheme").textContent="🎰 テーマルーレットを回す";
+  $("spinRole").textContent="🎭 役割ルーレットを回す";
+  document.querySelectorAll(".step-tab").forEach(function(b){b.classList.remove("done")});
+  showStep(1);
+});
+
+/* ---------- mute ---------- */
+$("btnMute").addEventListener("click",function(){
+  setMute(!muted); if(!muted){audio(); sndBeep()}
+});
+setMute(muted);
+
+/* ---------- theme modal ---------- */
+function renderThemeList(){
+  const ul=$("themeList"); ul.innerHTML="";
+  $("themeCount").textContent=allThemes().length;
+  customThemes.forEach(function(t,i){
+    ul.appendChild(li(t,i));
+  });
+  DEFAULT_THEMES.forEach(function(t){ul.appendChild(li(t,-1))});
+  function li(t,i){
+    const e=document.createElement("li");
+    const d=document.createElement("div"); d.className="t";
+    d.textContent=t.title;
+    const s=document.createElement("small"); s.textContent="A: "+t.a+" / B: "+t.b;
+    d.appendChild(s); e.appendChild(d);
+    if(i>=0){
+      const tag=document.createElement("span"); tag.className="tag"; tag.textContent="自作"; e.appendChild(tag);
+      const b=document.createElement("button"); b.className="del"; b.textContent="🗑 けす";
+      b.addEventListener("click",function(){
+        if(confirm("「"+t.title+"」を消しますか？")){
+          customThemes.splice(i,1); save(); renderThemeList();
+        }
+      });
+      e.appendChild(b);
+    }else{
+      const tag=document.createElement("span"); tag.className="tag"; tag.textContent="はじめから"; e.appendChild(tag);
+    }
+    return e;
+  }
+}
+$("btnTheme").addEventListener("click",function(){
+  if(busy) return;
+  renderThemeList(); $("modalBg").classList.remove("hidden");
+});
+function closeModal(){$("modalBg").classList.add("hidden")}
+$("closeModal").addEventListener("click",closeModal);
+$("modalBg").addEventListener("click",function(e){if(e.target===this) closeModal()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape") closeModal()});
+$("addTheme").addEventListener("click",function(){
+  const t=$("inTitle").value.trim(), a=$("inA").value.trim(), b=$("inB").value.trim();
+  if(!t||!a||!b){ toast("3つとも入力してね"); return }
+  customThemes.push({title:t,a:a,b:b}); save();
+  $("inTitle").value=$("inA").value=$("inB").value="";
+  renderThemeList(); toast("追加したよ！✨");
+});
+})();
+</script>
+</body>
+</html>
