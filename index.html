@@ -296,9 +296,9 @@ const PHASES=[
  {name:"質問＆反論タイム",emoji:"🔥",sec:120,who:["A","B"],
   msg:"お互いに質問したり、意見を戦わせよう！",
   say:"「質問と反論の時間です。相手の意見でわからなかったことを質問したり、反対の意見を言ったりしましょう。2分間です。」"},
- {name:"ジャッジタイム",emoji:"👑",sec:0,who:["J"],
-  msg:"👑司会の人は、どちらの意見に納得したか判定して理由を発表しよう！",
-  say:"「ジャッジタイムです。ぼく（わたし）は〇〇派の意見に納得しました。なぜなら…。みなさん、ありがとうございました！」"}
+ {name:"いいところ共有タイム",emoji:"👑",sec:0,who:["J"],
+  msg:"👑司会の人は、A派・B派それぞれの「いいな」と思ったところを伝えよう！勝ち負けは決めなくてOK！",
+  say:"「いいところ共有タイムです。A派の〇〇さんの『△△』という意見がいいなと思いました。B派の〇〇さんの『△△』というところも、なるほどと思いました。話し合って、新しくわかったこともありました。みなさん、ありがとうございました！」"}
 ];
 const EXTRA_SAY=[
  ["はじめのあいさつ","「これからミニディベートを始めます。テーマは『{theme}』です。A派は『{a}』、B派は『{b}』です。」"],
@@ -485,7 +485,7 @@ function buildMemberInputs(){
 const ROLE_INFO={
   A:function(){return {emoji:"🅰️",label:"A派",sub:theme.a}},
   B:function(){return {emoji:"🅱️",label:"B派",sub:theme.b}},
-  J:function(){return {emoji:"👑",label:"司会・ジャッジ",sub:"進行して、最後に判定する"}}
+  J:function(){return {emoji:"👑",label:"司会",sub:"進行して、最後にお互いのいいところを伝える"}}
 };
 function renderStep2(){
   buildMemberInputs();
