@@ -159,6 +159,61 @@ details[open] summary::after{transform:rotate(180deg)}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
 .confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:3px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+/* ---- 横長画面（Chromebook 16:9 など）---- */
+@media (min-width:760px) and (orientation:landscape){
+  .app{max-width:min(1180px,calc(100vw / var(--z,1)));padding:0 24px 24px;display:grid;grid-template-columns:1fr minmax(380px,460px);column-gap:16px;align-items:center}
+  header{padding-top:10px;padding-bottom:4px}
+  header h1{font-size:26px}
+  .steps{margin:6px 0}
+  .step-tab{padding:6px 4px}
+  .step-tab b{display:inline;font-size:18px;margin-right:4px}
+  #step1,#step2,#step3,#restart,details{grid-column:1/-1}
+  .card{padding:20px 24px;margin-bottom:12px}
+  .card h2{font-size:22px}
+  .hint{font-size:16px}
+  .btn{font-size:21px;padding:14px 12px}
+  .btn.small{font-size:17px}
+  #restart,#toStep2,#toStep3,#spinTheme,#spinRole{max-width:460px;margin-left:auto;margin-right:auto}
+
+  /* step1: 左にスロット、右に立場 */
+  #step1 .card{display:grid;grid-template-columns:1.2fr 1fr;column-gap:24px;align-items:center}
+  #step1 .card>h2,#step1 .card>.hint,#step1 .card>.btn{grid-column:1/-1;width:100%}
+  #step1 .slot{min-height:200px;font-size:30px}
+  #step1 .stances{margin-top:0;font-size:20px}
+  #step1 .stance{font-size:22px;padding:18px}
+
+  /* step2: 左に名前入力、右に役割 */
+  #step2 .card{display:grid;grid-template-columns:1fr 1fr;column-gap:24px;align-items:start}
+  #step2 .card>h2,#step2 .card>.btn{grid-column:1/-1;width:100%}
+  #step2 #stances2{grid-column:1;margin-top:0}
+  #step2 .card>.hint{grid-column:1}
+  #step2 #memberInputs{grid-column:1}
+  #step2 #roleList{grid-column:2;grid-row:2/5;margin-top:0;align-self:center}
+  #step2 .role{padding:16px 18px}
+  #step2 .role .who{font-size:26px}
+  #step2 .role .emoji{font-size:42px}
+
+  /* step3: 左に説明、右にタイマー */
+  #step3 .card{display:grid;grid-template-columns:1.1fr 1fr;column-gap:28px;align-items:center}
+  #step3 .card>.phase-dots,#step3 .card>.nav{grid-column:1/-1}
+  #step3 .card>.phase-sub{grid-column:1/-1;margin:0 0 4px}
+  #step3 .phase-title{grid-column:1;font-size:30px}
+  #step3 .phase-msg{grid-column:1;font-size:21px;margin:8px 0}
+  #step3 .phase-who{grid-column:1;margin:0}
+  #step3 .chip{font-size:16px}
+  #timerBox,#judgeBox{grid-column:2;grid-row:3/6}
+  .timer{font-size:104px}
+  #step3 .nav .btn{max-width:260px}
+  #step3 .nav{justify-content:center}
+  details{margin-bottom:12px}
+}
+@media (min-width:760px) and (orientation:landscape) and (max-height:700px){
+  .card{padding:14px 20px}
+  .btn{padding:10px 12px;font-size:19px;margin-top:8px}
+  #step1 .slot{min-height:150px}
+  .timer{font-size:84px;margin:2px 0}
+  summary{padding:12px 18px}
+}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;z-index:60;font-size:14px}
 </style>
 </head>
@@ -688,6 +743,33 @@ $("addTheme").addEventListener("click",function(){
   $("inTitle").value=$("inA").value=$("inB").value="";
   renderThemeList(); toast("追加したよ！✨");
 });
+})();
+
+/* ---------- 横長画面：画面の高さに合わせて拡大 ---------- */
+(function(){
+  const app=document.querySelector(".app");
+  const mq=window.matchMedia("(min-width:760px) and (orientation:landscape)");
+  let t=null;
+  function fit(){
+    app.style.zoom=1; app.style.setProperty("--z",1);
+    if(!mq.matches) return;
+    const target=window.innerHeight-6;
+    let z=1;
+    for(let i=0;i<5;i++){
+      const h=app.getBoundingClientRect().height;
+      if(!h) break;
+      const nz=Math.max(1,Math.min(1.7,z*target/h));
+      if(Math.abs(nz-z)<0.01) break;
+      z=nz; app.style.zoom=z; app.style.setProperty("--z",z);
+    }
+    if(app.getBoundingClientRect().height>target+2 && z>1){ z=Math.max(1,z*0.95); app.style.zoom=z; app.style.setProperty("--z",z) }
+  }
+  function soon(){clearTimeout(t); t=setTimeout(fit,60)}
+  window.addEventListener("resize",soon);
+  document.addEventListener("click",soon);
+  document.addEventListener("toggle",soon,true);
+  new MutationObserver(soon).observe(app,{subtree:true,attributes:true,attributeFilter:["class"]});
+  fit();
 })();
 </script>
 </body>
